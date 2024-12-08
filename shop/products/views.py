@@ -19,20 +19,21 @@ class ProductAPIView(APIView):
         else:
             products = Product.objects.all()
             paginator = PageNumberPagination()
-
             filters = Q()
+
             name = request.query_params.get('name')
             is_vip = request.query_params.get('is_vip')
             min_price = request.query_params.get('min_price')
             max_price = request.query_params.get('max_price')
             min_rating = request.query_params.get('min_rating')
             max_rating = request.query_params.get('max_rating')
+            order = request.query_params.get('order') or 'rating'
 
             if name:
                 name = ' '.join(name.split('-'))
                 filters &= Q(name__icontains=name)
             if is_vip:
-                filters = Q(is_vip=is_vip.capitalize())
+                filters &= Q(is_vip=is_vip.capitalize())
             if min_price:
                 filters &= Q(price_usd__gte=min_price)
             if max_price:
@@ -42,7 +43,7 @@ class ProductAPIView(APIView):
             if max_rating:
                 filters &= Q(rating__lte=max_rating)
 
-            products = products.filter(filters).order_by('rating')
+            products = products.filter(filters).order_by(order)
             paginated_products = paginator.paginate_queryset(products, request)
             serializer = ProductSerializer(paginated_products, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
