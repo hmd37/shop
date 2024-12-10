@@ -46,7 +46,15 @@ class ProductAPIView(APIView):
             products = products.filter(filters).order_by(order)
             paginated_products = paginator.paginate_queryset(products, request)
             serializer = ProductSerializer(paginated_products, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+
+            response_data = {
+                "count": paginator.page.paginator.count,
+                "total_pages": paginator.page.paginator.num_pages,
+                "current_page": paginator.page.number,
+                "results": serializer.data
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = ProductSerializer(data=request.data)
